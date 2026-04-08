@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kontrakan App
 
-## Getting Started
+Aplikasi manajemen kos / kontrakan / parkir. Built with Next.js 15, Tailwind CSS, Supabase, deployed on Vercel.
 
-First, run the development server:
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth
+- **Deploy**: Vercel
+
+## Features
+
+- Multi-location property management
+- Owner, unit, customer, contract management
+- Dynamic billing (charge types + charge rules)
+- Invoice & payment tracking
+- Shared utilities per location
+- Maintenance tracking
+- Reports (revenue, occupancy, per-owner)
+- Role-based access (Admin + Staff)
+- Mobile-first responsive design
+
+## Setup
+
+### 1. Clone & Install
+
+```bash
+npm install
+```
+
+### 2. Supabase Setup
+
+1. Buat project baru di [supabase.com](https://supabase.com)
+2. Jalankan semua migration:
+
+```bash
+# Paste isi supabase/migrations/001_initial_schema.sql ke Supabase SQL Editor
+# Paste isi supabase/migrations/002_rls_policies.sql ke Supabase SQL Editor
+# Paste isi supabase/migrations/003_triggers.sql ke Supabase SQL Editor
+# Paste isi supabase/migrations/004_storage.sql ke Supabase SQL Editor
+```
+
+3. Copy environment variables dari `.env.local.example` ke `.env.local`
+
+### 3. Environment Variables
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 4. Generate Supabase Types
+
+```bash
+npx supabase gen types typescript --project-id your-project-id > src/types/database.types.ts
+```
+
+### 5. Run Dev Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 6. Create Admin User
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Buka aplikasi di browser
+2. Gunakan Supabase Dashboard → Authentication → Create user
+3. Set role menjadi `admin` di tabel `users`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+### Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push ke GitHub repository
+2. Import project di [vercel.com](https://vercel.com)
+3. Set environment variables di Vercel dashboard
+4. Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database Schema
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+locations → units → owners
+              ↓
+          contracts → customers
+               ↓
+            invoices → invoice_items → payments
+               ↓
+         shared_utilities
+               ↓
+           maintenance
+```
 
-## Deploy on Vercel
+## Dokumentasi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [SPEC.md](SPEC.md) — Spesifikasi lengkap project
+- [PROGRESS.md](PROGRESS.md) — Tracker progress development

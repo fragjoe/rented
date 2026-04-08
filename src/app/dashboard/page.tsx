@@ -9,9 +9,7 @@ import {
   MapPin,
   Home,
   Users,
-  DollarSign,
   Receipt,
-  TrendingUp,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,46 +18,65 @@ export const metadata: Metadata = { title: 'Dashboard' }
 export default async function DashboardPage() {
   const supabase = createServerAdminClient()
 
-  // Fetch all stats sequentially
-  const locationsResult = await supabase
-    .from('locations')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_active', true)
-    .is('deleted_at', null)
+  let totalLocations = 0
+  let totalUnits = 0
+  let occupiedUnits = 0
+  let overdueInvoicesCount = 0
+  let recentInvoices: { id: string; invoice_number: string; total_amount: number | string; status: string; due_date: string }[] = []
+  try {
+    const [locationsResult, unitsResult, occupiedUnitsResult, overdueResult, recentInvoicesResult] =
+      await Promise.all([
+        supabase
+          .from('locations')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .is('deleted_at', null),
+        supabase
+          .from('units')
+          .select('*', { count: 'exact', head: true })
+          .is('deleted_at', null),
+        supabase
+          .from('units')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'occupied')
+          .is('deleted_at', null),
+        supabase
+          .from('invoices')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'overdue')
+          .is('deleted_at', null),
+        supabase
+          .from('invoices')
+          .select('id, invoice_number, total_amount, status, due_date, created_at')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ])
 
-  const unitsResult = await supabase
-    .from('units')
-    .select('*', { count: 'exact', head: true })
-    .is('deleted_at', null)
+    for (const [name, result] of [
+      ['locations', locationsResult],
+      ['units', unitsResult],
+      ['occupiedUnits', occupiedUnitsResult],
+      ['overdue', overdueResult],
+      ['recentInvoices', recentInvoicesResult],
+    ] as const) {
+      if (result.error) {
+        console.error(`[Dashboard] query error [${name}]:`, result.error)
+      }
+    }
 
-  const occupiedUnitsResult = await supabase
-    .from('units')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'occupied')
-    .is('deleted_at', null)
+    totalLocations = locationsResult.count ?? 0
+    totalUnits = unitsResult.count ?? 0
+    occupiedUnits = occupiedUnitsResult.count ?? 0
+    overdueInvoicesCount = overdueResult.count ?? 0
+    recentInvoices = recentInvoicesResult.data ?? []
+  } catch (err) {
+    console.error('[Dashboard] data fetch failed:', err)
+  }
 
-  const overdueResult = await supabase
-    .from('invoices')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'overdue')
-    .is('deleted_at', null)
-
-  const recentInvoicesResult = await supabase
-    .from('invoices')
-    .select('id, invoice_number, total_amount, status, due_date')
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  const totalLocations = locationsResult.count || 0
-  const totalUnits = unitsResult.count || 0
-  const occupiedUnits = occupiedUnitsResult.count || 0
-  const recentInvoices = recentInvoicesResult.data || []
-  const overdueInvoicesCount = overdueResult.count || 0
   const availableUnits = totalUnits - occupiedUnits
   const occupancyRate =
-    totalUnits && totalUnits > 0
-      ? Math.round(((occupiedUnits || 0) / totalUnits) * 100)
-      : 0
+    totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0
 
   return (
     <PageTemplate
@@ -81,8 +98,8 @@ export default async function DashboardPage() {
         />
         <StatsCard
           title="Terisi"
-          value={`${occupiedUnits || 0} unit`}
-          subtitle={`${occupancyRate}% okupansi`}
+          value={occupiedUnits}
+          subtitle={`${availableUnits} tersedia · ${occupancyRate}% okupansi`}
           icon={<Users className="w-5 h-5" />}
         />
         <StatsCard
