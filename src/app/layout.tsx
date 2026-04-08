@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { NavigationProgress } from '@/components/ui/navigation-progress'
 
 export const metadata: Metadata = {
   title: 'Kontrakan App',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <NavigationProgress />
+        {children}
+      </body>
     </html>
   )
 }

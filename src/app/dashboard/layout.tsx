@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createServerAdminClient } from '@/lib/supabase/server-admin'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
+import { NavigationProgress } from '@/components/ui/navigation-progress'
 
 export default async function DashboardLayout({
   children,
@@ -32,15 +33,18 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        email: user.email || '',
-        fullName: profile?.full_name,
-        role: profile?.role || 'staff',
-      }}
-    >
-      {children}
-    </DashboardShell>
+    <>
+      <NavigationProgress />
+      <DashboardShell
+        user={{
+          id: user.id,
+          email: user.email || '',
+          fullName: profile?.full_name,
+          role: profile?.role || 'staff',
+        }}
+      >
+        {children}
+      </DashboardShell>
+    </>
   )
 }
