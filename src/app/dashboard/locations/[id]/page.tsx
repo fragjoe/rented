@@ -1,15 +1,11 @@
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { PageTemplate } from '@/components/dashboard/page-template'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { StatusBadge } from '@/components/ui/badge'
-import { DataTable } from '@/components/dashboard/data-table'
 import { getLocation } from '@/lib/db/actions'
-import { formatCurrency } from '@/lib/utils/format'
 
 type Props = { params: Promise<{ id: string }> }
 

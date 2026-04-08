@@ -6,7 +6,6 @@ import { PageTemplate } from '@/components/dashboard/page-template'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/badge'
-import { DataTable } from '@/components/dashboard/data-table'
 import { getContract, getInvoices } from '@/lib/db/actions'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 
