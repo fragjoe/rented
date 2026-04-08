@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Input, Textarea } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
+import { createServerAdminClient } from '@/lib/supabase/server-admin'
 import { Settings } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Pengaturan' }
@@ -13,11 +14,12 @@ export default async function SettingsPage() {
   const { data: { session } } = await supabase.auth.getSession()
   const user = session?.user ?? null
 
-  const { data: profile } = await supabase
+  const adminClient = createServerAdminClient()
+  const { data: profile } = await adminClient
     .from('users')
     .select('*')
     .eq('id', user?.id)
-    .single()
+    .maybeSingle()
 
   return (
     <PageTemplate title="Pengaturan" description="Pengaturan akun dan aplikasi" breadcrumbs={[{ label: 'Pengaturan' }]}>

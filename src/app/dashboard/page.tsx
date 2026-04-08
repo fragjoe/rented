@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createServerAdminClient } from '@/lib/supabase/server-admin'
 import { PageTemplate } from '@/components/dashboard/page-template'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { Card } from '@/components/ui/card'
@@ -18,7 +18,7 @@ import Link from 'next/link'
 export const metadata: Metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const supabase = createServerAdminClient()
 
   // Fetch all stats sequentially
   const locationsResult = await supabase
