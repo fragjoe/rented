@@ -10,7 +10,8 @@ export const metadata: Metadata = { title: 'Pengaturan' }
 
 export default async function SettingsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   const { data: profile } = await supabase
     .from('users')
