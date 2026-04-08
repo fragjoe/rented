@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { signIn } from '../actions'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -13,10 +15,16 @@ export default function LoginPage() {
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
+
     const result = await signIn(formData)
+
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
+    } else if (result?.success) {
+      // Redirect manually after successful login
+      router.push('/dashboard')
+      router.refresh()
     }
   }
 

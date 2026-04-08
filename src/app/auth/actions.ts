@@ -1,7 +1,6 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signIn(formData: FormData) {
@@ -19,7 +18,8 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/dashboard')
+  // Return success — redirect handled by client
+  return { success: true }
 }
 
 export async function signUp(formData: FormData) {
@@ -28,7 +28,7 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
-  const role = formData.get('role') as string || 'staff'
+  const role = (formData.get('role') as string) || 'staff'
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -45,7 +45,7 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function signOut() {
