@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signIn } from '../actions'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -12,24 +12,34 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setIsLoading(true)
     setError(null)
 
-    const result = await signIn(formData)
+    const form = e.currentTarget
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
 
-    if (result?.error) {
-      setError(result.error)
+    const supabase = createClient()
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError) {
+      setError(authError.message)
       setIsLoading(false)
-    } else if (result?.success) {
-      // Redirect manually after successful login
-      router.push('/dashboard')
-      router.refresh()
+      return
     }
+
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Masuk</h2>
       </div>
