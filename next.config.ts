@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+  reactStrictMode: true,
+  // Prevent Turbopack from bundling Node.js packages into client
+  serverExternalPackages: ['tailwindcss'],
+}
