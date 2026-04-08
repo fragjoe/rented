@@ -20,14 +20,8 @@ export const metadata: Metadata = { title: 'Dashboard' }
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch stats in parallel
-  const [
-    locationsResult,
-    unitsResult,
-    occupiedUnitsResult,
-    recentInvoicesResult,
-    overdueResult,
-  ] = await Promise.all([
+  // Fetch stats sequentially to avoid connection pool exhaustion on Vercel
+  const [locationsResult, unitsResult, recentInvoicesResult, overdueResult] = await Promise.all([
     supabase
       .from('locations')
       .select('*', { count: 'exact', head: true })
@@ -35,11 +29,6 @@ export default async function DashboardPage() {
     supabase
       .from('units')
       .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null),
-    supabase
-      .from('units')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'occupied')
       .is('deleted_at', null),
     supabase
       .from('invoices')
@@ -62,6 +51,12 @@ export default async function DashboardPage() {
       .eq('status', 'overdue')
       .is('deleted_at', null),
   ])
+
+  const occupiedUnitsResult = await supabase
+    .from('units')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'occupied')
+    .is('deleted_at', null)
 
   const totalLocations = locationsResult.count || 0
   const totalUnits = unitsResult.count || 0

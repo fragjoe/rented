@@ -12,24 +12,16 @@ export const metadata: Metadata = { title: 'Laporan' }
 export default async function ReportsPage() {
   const supabase = await createClient()
 
-  const [
-    { data: revenueData },
-    { data: occupancyData },
-    { data: overdueInvoices },
-    { count: totalLocations },
-    { count: totalUnits },
-  ] = await Promise.all([
-    supabase
-      .from('payments')
-      .select('amount, payment_date', { count: 'exact', head: false })
-      .eq('status', 'completed'),
-    supabase
-      .from('units')
-      .select('*', { count: 'exact', head: false })
-      .eq('status', 'occupied'),
-    supabase
-      .from('invoices')
-      .select('total_amount, amount_paid'),
+  const paymentsResult = await supabase
+    .from('payments')
+    .select('amount, payment_date', { count: 'exact', head: false })
+    .eq('status', 'completed')
+
+  const invoicesResult = await supabase
+    .from('invoices')
+    .select('total_amount, amount_paid')
+
+  const [totalLocationsResult, totalUnitsResult] = await Promise.all([
     supabase
       .from('locations')
       .select('*', { count: 'exact', head: true })
@@ -40,8 +32,15 @@ export default async function ReportsPage() {
       .is('deleted_at', null),
   ])
 
-  const totalRevenue = (revenueData || []).reduce((sum, p) => sum + Number(p.amount), 0)
-  const totalOverdue = (overdueInvoices || []).filter((i) => i.total_amount - i.amount_paid > 0).length
+  const { data: occupancyData } = await supabase
+    .from('units')
+    .select('*', { count: 'exact', head: false })
+    .eq('status', 'occupied')
+
+  const totalRevenue = (paymentsResult.data || []).reduce((sum, p) => sum + Number(p.amount), 0)
+  const totalOverdue = (invoicesResult.data || []).filter((i) => i.total_amount - i.amount_paid > 0).length
+  const totalLocations = totalLocationsResult.count || 0
+  const totalUnits = totalUnitsResult.count || 0
 
   return (
     <PageTemplate title="Laporan" description="Laporan keuangan dan operasional" breadcrumbs={[{ label: 'Laporan' }]}>
@@ -56,11 +55,11 @@ export default async function ReportsPage() {
           title="Unit Terisi"
           value={`${(occupancyData || []).length} unit`}
           icon={<Home className="w-5 h-5" />}
-          subtitle={`dari ${totalUnits || 0} unit`}
+          subtitle={`dari ${totalUnits} unit`}
         />
         <StatsCard
           title="Lokasi"
-          value={totalLocations || 0}
+          value={totalLocations}
           icon={<TrendingUp className="w-5 h-5" />}
         />
         <StatsCard
@@ -91,7 +90,7 @@ export default async function ReportsPage() {
 
         <Card title="Status Tagihan">
           <div className="space-y-3">
-            {(overdueInvoices || []).slice(0, 5).map((inv, i) => (
+            {(invoicesResult.data || []).slice(0, 5).map((inv, i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                 <div>
                   <p className="text-sm text-gray-900">
@@ -101,7 +100,7 @@ export default async function ReportsPage() {
                 <StatusBadge status="overdue" />
               </div>
             ))}
-            {(!overdueInvoices || overdueInvoices.length === 0) && (
+            {(!invoicesResult.data || invoicesResult.data.length === 0) && (
               <p className="text-sm text-gray-500 text-center py-4">Tidak ada data</p>
             )}
           </div>
