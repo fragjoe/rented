@@ -16,12 +16,18 @@ export default async function DashboardLayout({
     redirect('/auth/login')
   }
 
-  // Get user profile
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, role')
-    .eq('id', user.id)
-    .single()
+  // Get user profile — wrap in try-catch to avoid crashing the layout
+  let profile = null
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('full_name, role')
+      .eq('id', user.id)
+      .maybeSingle()
+    profile = data
+  } catch (err) {
+    console.error('Failed to fetch profile:', err)
+  }
 
   return (
     <DashboardShell

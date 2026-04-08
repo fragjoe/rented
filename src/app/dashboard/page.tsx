@@ -20,43 +20,35 @@ export const metadata: Metadata = { title: 'Dashboard' }
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch stats sequentially to avoid connection pool exhaustion on Vercel
-  const [locationsResult, unitsResult, recentInvoicesResult, overdueResult] = await Promise.all([
-    supabase
-      .from('locations')
-      .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null),
-    supabase
-      .from('units')
-      .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null),
-    supabase
-      .from('invoices')
-      .select(`
-        id,
-        invoice_number,
-        total_amount,
-        status,
-        due_date,
-        contracts!inner(
-          customers!inner(full_name),
-          units!inner(unit_number, locations!inner(name))
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .limit(5),
-    supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'overdue')
-      .is('deleted_at', null),
-  ])
+  // Fetch all stats sequentially
+  const locationsResult = await supabase
+    .from('locations')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_active', true)
+    .is('deleted_at', null)
+
+  const unitsResult = await supabase
+    .from('units')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
 
   const occupiedUnitsResult = await supabase
     .from('units')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'occupied')
     .is('deleted_at', null)
+
+  const overdueResult = await supabase
+    .from('invoices')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'overdue')
+    .is('deleted_at', null)
+
+  const recentInvoicesResult = await supabase
+    .from('invoices')
+    .select('id, invoice_number, total_amount, status, due_date')
+    .order('created_at', { ascending: false })
+    .limit(5)
 
   const totalLocations = locationsResult.count || 0
   const totalUnits = unitsResult.count || 0
@@ -120,39 +112,32 @@ export default async function DashboardPage() {
       >
         {recentInvoices && recentInvoices.length > 0 ? (
           <div className="divide-y divide-gray-100">
-            {recentInvoices.map((invoice) => {
-              const contract = invoice.contracts as unknown as {
-                customers: { full_name: string }
-                units: { unit_number: string; locations: { name: string } }
-              }
-              return (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {invoice.invoice_number}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {contract?.customers?.full_name} —{' '}
-                      {contract?.units?.locations?.name} / {contract?.units?.unit_number}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {formatCurrency(invoice.total_amount)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatDate(invoice.due_date)}
-                      </p>
-                    </div>
-                    <StatusBadge status={invoice.status} />
-                  </div>
+            {recentInvoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {invoice.invoice_number}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    —
+                  </p>
                 </div>
-              )
-            })}
+                <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {formatCurrency(invoice.total_amount)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(invoice.due_date)}
+                    </p>
+                  </div>
+                  <StatusBadge status={invoice.status} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-sm text-gray-500 text-center py-8">
