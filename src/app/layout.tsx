@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import { NavigationProgress } from '@/components/ui/navigation-progress'
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body>
-        <NavigationProgress />
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
       </body>
     </html>

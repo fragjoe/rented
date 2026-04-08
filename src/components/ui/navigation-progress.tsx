@@ -1,25 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export function NavigationProgress() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [isNavigating, setIsNavigating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    // Trigger on any pathname or searchParam change
-    // Small delay to detect actual navigation (not initial mount)
     const timer = setTimeout(() => {
       setIsNavigating(true)
       setVisible(true)
       setProgress(20)
     }, 50)
 
-    // Simulate progress
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
@@ -34,11 +30,10 @@ export function NavigationProgress() {
       clearTimeout(timer)
       clearInterval(interval)
     }
-  }, [pathname, searchParams])
+  }, [pathname])
 
   useEffect(() => {
     if (isNavigating) {
-      // Navigation complete — fill to 100% then hide
       setProgress(100)
       const timer = setTimeout(() => {
         setVisible(false)
@@ -47,7 +42,7 @@ export function NavigationProgress() {
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [pathname, searchParams, isNavigating])
+  }, [pathname, isNavigating])
 
   return (
     <div

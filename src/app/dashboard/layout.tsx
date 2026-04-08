@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createServerAdminClient } from '@/lib/supabase/server-admin'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
@@ -34,7 +35,9 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <NavigationProgress />
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <DashboardShell
         user={{
           id: user.id,
